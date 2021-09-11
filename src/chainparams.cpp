@@ -89,7 +89,7 @@ public:
 
 
         consensus.nDiffChangeTarget = 600000;
-        consensus.nDiffChangeTargetAuxpow = 6570100;
+        consensus.nDiffChangeTargetAuxpow = 6570240;
         consensus.patchBlockRewardDuration = 20160;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); 
         consensus.nPowTargetTimespan = 0.35 *24 * 60 * 60;	// litecoin: 0.35 day
@@ -195,7 +195,7 @@ public:
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,73);
         // base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);  // 
 		//Fix me:
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,33);    // segwit addresses will start with E
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,135);    // segwit addresses will start with W
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,201);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};

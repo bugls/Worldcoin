@@ -90,15 +90,15 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
         //retargetInterval = params.DifficultyAdjustmentIntervalRe();
     }
 
-    if (fNewDifficultyProtocol) {
-        if (nActualTimespan < (retargetTimespan - (retargetTimespan/10)) ) nActualTimespan = (retargetTimespan - (retargetTimespan/10));
-        if (nActualTimespan > (retargetTimespan + (retargetTimespan/10)) ) nActualTimespan = (retargetTimespan + (retargetTimespan/10));        
-    } else if (fNewDifficultyProtocolAuxpow) {
+    if (fNewDifficultyProtocolAuxpow) {
         if (nActualTimespan < retargetTimespan/16) nActualTimespan = retargetTimespan/16;
         if (nActualTimespan > retargetTimespan*16) nActualTimespan = retargetTimespan*16;
+    } else if (fNewDifficultyProtocol) {
+        if (nActualTimespan < (retargetTimespan - (retargetTimespan/10)) ) nActualTimespan = (retargetTimespan - (retargetTimespan/10));
+        if (nActualTimespan > (retargetTimespan + (retargetTimespan/10)) ) nActualTimespan = (retargetTimespan + (retargetTimespan/10));   
     } else {
-        if (nActualTimespan < retargetTimespan/4)                          nActualTimespan = retargetTimespan/4;
-        if (nActualTimespan > retargetTimespan*4)                          nActualTimespan = retargetTimespan*4;
+        if (nActualTimespan < retargetTimespan/4) nActualTimespan = retargetTimespan/4;
+        if (nActualTimespan > retargetTimespan*4) nActualTimespan = retargetTimespan*4;
     }
 
     // Retarget

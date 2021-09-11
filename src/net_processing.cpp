@@ -1685,7 +1685,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         
         if (cleanSubVer.find("WorldcoinCore") == std::string::npos) {
-            LogPrintf("invalid subver %s at %s, disconnecting\n", cleanSubVer, pfrom->addr.ToString());
+            //LogPrintf("invalid subver %s at %s, disconnecting\n", cleanSubVer, pfrom->addr.ToString());
             //pfrom->PushMessage("reject", strCommand, REJECT_INVALID, string("invalid client subver"));
             pfrom->fDisconnect = true;
             return true;
