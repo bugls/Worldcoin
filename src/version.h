@@ -30,16 +30,16 @@ static const int CADDR_TIME_VERSION = 31402;
 static const int BIP0031_VERSION = 60000;
 
 //! "filter*" commands are disabled without NODE_BLOOM after and including this version
-static const int NO_BLOOM_VERSION = 70017;
+static const int NO_BLOOM_VERSION = 70015;
 
 //! "sendheaders" command and announcing blocks with headers starts with this version
-static const int SENDHEADERS_VERSION = 70017;
+static const int SENDHEADERS_VERSION = 70015;
 
 //! "feefilter" tells peers to filter invs to you by fee starts with this version
-static const int FEEFILTER_VERSION = 70017;
+static const int FEEFILTER_VERSION = 70015;
 
 //! short-id-based block download starts with this version
-static const int SHORT_IDS_BLOCKS_VERSION = 70017;
+static const int SHORT_IDS_BLOCKS_VERSION = 70015;
 
 //! not banning for invalid compact blocks starts with this version
 static const int INVALID_CB_NO_BAN_VERSION = 70015;
