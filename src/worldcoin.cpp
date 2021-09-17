@@ -93,8 +93,8 @@ unsigned int CalculateWorldcoinNextWorkRequired(const CBlockIndex* pindexLast, i
         return pindexLast->nBits;
 
     int nHeight = pindexLast->nHeight + 1;
-    const int64_t retargetTimespan = params.nPowTargetTimespan;
-    const int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
+    int64_t retargetTimespan = params.nPowTargetTimespan;
+    int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
     int64_t nModulatedTimespan = nActualTimespan;
     int64_t nMaxTimespan;
     int64_t nMinTimespan;
