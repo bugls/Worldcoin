@@ -60,6 +60,7 @@ struct Params {
     int BIP66Height;
     int64_t nDiffChangeTarget;
     int64_t nDiffChangeTargetAuxpow;
+    int64_t nDiffChangeTargetDigishield;
     int64_t patchBlockRewardDuration;
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
@@ -77,10 +78,18 @@ struct Params {
     int64_t nPowTargetTimespan;
     int64_t nTargetTimespanRe;
     int64_t nTargetSpacingRe;
+    int64_t nDigishieldPowTargetTimespan;
+
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     int64_t DifficultyAdjustmentIntervalRe() const { return nTargetTimespanRe / nTargetSpacingRe; }
+    int64_t DifficultyAdjustmentIntervalDigiShield() const { return nDigishieldPowTargetTimespan / nTargetSpacingRe; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
+
+    /** Dogecoin-specific parameters */
+    bool fDigishieldDifficultyCalculation;
+    bool fPowAllowDigishieldMinDifficultyBlocks; // Allow minimum difficulty blocks where a retarget would normally occur
+
 
     /** Auxpow parameters */
     int32_t nAuxpowChainId;

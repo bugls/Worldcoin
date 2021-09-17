@@ -95,8 +95,8 @@ public:
         consensus.nPowTargetTimespan = 0.35 *24 * 60 * 60;	// litecoin: 0.35 day
         consensus.nPowTargetSpacing = 15;					// litecoin: 15 sec
         
-        consensus.nTargetTimespanRe = 60 * 60;	            // litecoin: 1 hour
-        consensus.nTargetSpacingRe = 1 * 30;				// litecoin: 30 sec
+        consensus.nTargetTimespanRe = 60 * 60;	            // worldcoin: 1 hour
+        consensus.nTargetSpacingRe = 1 * 30;				// worldcoin: 30 sec
         
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
@@ -118,6 +118,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1611720000; // Wednesday, January 27, 2021 4:00:00 AM
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1614398400; // Saturday, February 27, 2021 4:00:00 AM
 
+
+
         // The best chain should have at least this much work.
         //consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000004ea75c690519ca29");
         //Fix me: The best chain should have at least this much work. 
@@ -132,6 +134,12 @@ public:
         consensus.nAuxpowStartHeight = AUXPOW_START_HEIGHT;
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = AUXPOW_START_HEIGHT;     
+
+        // Blocks 6569805 - 6610000 are  AuxPoW without Digishield
+        consensus.nDigishieldStartHeight = DIGISHIELD_START_HEIGHT;
+        consensus.fDigishieldDifficultyCalculation = true;
+        consensus.nDigishieldPowTargetTimespan = 30; // post-digishield: 0.5 minute
+
         /** 
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce

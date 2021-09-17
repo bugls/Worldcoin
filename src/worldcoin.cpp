@@ -25,17 +25,17 @@ int static generateMTRandom(unsigned int s, int range)
 // Worldcoin: Normally minimum difficulty blocks can only occur in between
 // retarget blocks. However, once we introduce Digishield every block is
 // a retarget, so we need to handle minimum difficulty on all blocks.
-bool AllowDigishieldMinDifficultyForBlock(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
-{
-    // never allow minimal difficulty, WDC retarget works fine	
-    return false;
-}
+//bool AllowDigishieldMinDifficultyForBlock(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
+//{
+//   // never allow minimal difficulty, WDC retarget works fine	
+//    return false;
+//}
 
-unsigned int CalculateWorldcoinNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
-{
-    // do not change retarget algo	
-    return CalculateNextWorkRequired(pindexLast, nFirstBlockTime, params);
-}
+//unsigned int CalculateWorldcoinNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
+//{
+//    // do not change retarget algo	
+//    return CalculateNextWorkRequired(pindexLast, nFirstBlockTime, params);
+//}
 
 bool CheckAuxPowProofOfWork(const CBlockHeader& block, const Consensus::Params& params)
 {
@@ -68,6 +68,102 @@ bool CheckAuxPowProofOfWork(const CBlockHeader& block, const Consensus::Params& 
         return error("%s : AUX proof of work failed", __func__);
 
     return true;	
+}
+
+bool AllowDigishieldMinDifficultyForBlock(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
+{
+    // check if the chain allows minimum difficulty blocks
+    if (!params.fPowAllowMinDifficultyBlocks)
+        return false;
+
+    // check if the chain allows minimum difficulty blocks on recalc blocks
+    if (pindexLast->nHeight < params.nDigishieldStartHeight)
+    // if (!params.fPowAllowDigishieldMinDifficultyBlocks)
+        return false;
+
+    // Allow for a minimum block time if the elapsed time > 2*nTargetSpacing
+    return (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2);
+}
+
+
+
+unsigned int CalculateWorldcoinNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
+{
+    if (params.fPowNoRetargeting)
+        return pindexLast->nBits;
+
+    int nHeight = pindexLast->nHeight + 1;
+    const int64_t retargetTimespan = params.nPowTargetTimespan;
+    const int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
+    int64_t nModulatedTimespan = nActualTimespan;
+    int64_t nMaxTimespan;
+    int64_t nMinTimespan;
+
+    bool fNewDifficultyProtocol = (nHeight >= params.nDiffChangeTarget);
+    bool fNewDifficultyProtocolAuxpow = (nHeight >= params.nDiffChangeTargetAuxpow);
+    bool fNewDifficultyProtocolDigiShiled = (nHeight >= params.nDiffChangeTargetDigishield);
+
+
+    if (fNewDifficultyProtocolDigiShiled) { //DigiShield implementation - thanks to RealSolid & WDC for this code
+        retargetTimespan = params.nDigishieldPowTargetTimespan;
+        // amplitude filter - thanks to daft27 for this code
+        nModulatedTimespan = retargetTimespan + (nModulatedTimespan - retargetTimespan) / 8;
+        nMinTimespan = retargetTimespan - (retargetTimespan / 4);
+        nMaxTimespan = retargetTimespan + (retargetTimespan / 2);
+
+        // Limit adjustment step
+        if (nModulatedTimespan < nMinTimespan)
+            nModulatedTimespan = nMinTimespan;
+        else if (nModulatedTimespan > nMaxTimespan)
+            nModulatedTimespan = nMaxTimespan;
+
+        // Retarget
+        const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+        arith_uint256 bnNew;
+        arith_uint256 bnOld;
+        bnNew.SetCompact(pindexLast->nBits);
+        bnOld = bnNew;
+        bnNew *= nModulatedTimespan;
+        bnNew /= retargetTimespan;
+
+        if (bnNew > bnPowLimit)
+            bnNew = bnPowLimit;
+
+        return bnNew.GetCompact();
+        
+    } else if (fNewDifficultyProtocolAuxpow) {
+        retargetTimespan = params.nTargetTimespanRe;
+        if (nActualTimespan < retargetTimespan/16) nActualTimespan = retargetTimespan/16;
+        if (nActualTimespan > retargetTimespan*16) nActualTimespan = retargetTimespan*16;
+    } else if (fNewDifficultyProtocol) {
+        retargetTimespan = params.nTargetTimespanRe;
+        if (nActualTimespan < (retargetTimespan - (retargetTimespan/10)) ) nActualTimespan = (retargetTimespan - (retargetTimespan/10));
+        if (nActualTimespan > (retargetTimespan + (retargetTimespan/10)) ) nActualTimespan = (retargetTimespan + (retargetTimespan/10));  
+    } else {
+        retargetTimespan = params.nPowTargetTimespan;
+        if (nActualTimespan < retargetTimespan/4) nActualTimespan = retargetTimespan/4;
+        if (nActualTimespan > retargetTimespan*4) nActualTimespan = retargetTimespan*4;
+    }
+
+    // Retarget
+    arith_uint256 bnNew;
+    arith_uint256 bnOld;
+    bnNew.SetCompact(pindexLast->nBits);
+    bnOld = bnNew;
+    // litecoin: intermediate uint256 can overflow by 1 bit
+    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+    bool fShift = bnNew.bits() > bnPowLimit.bits() - 1;
+    if (fShift)
+        bnNew >>= 1;
+    bnNew *= nActualTimespan;
+    bnNew /= retargetTimespan;
+    if (fShift)
+        bnNew <<= 1;
+
+    if (bnNew > bnPowLimit)
+        bnNew = bnPowLimit;
+
+    return bnNew.GetCompact();
 }
 
 CAmount GetWorldcoinBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
