@@ -27,7 +27,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     if (AllowDigishieldMinDifficultyForBlock(pindexLast, pblock, params))
     {
         // Special difficulty rule for testnet:
-        // If the new block's timestamp is more than 2* nTargetSpacing minutes
+        // If the new block's timestamp is more than 4* nTargetSpacing minutes
         // then allow mining of a min-difficulty block.
         return nProofOfWorkLimit;
     }
@@ -40,11 +40,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
 
     if (nHeight >= params.nDiffChangeTargetDigishield) {
-        
         retargetSpacing  = params.nTargetSpacingRe;
         retargetInterval = params.DifficultyAdjustmentIntervalDigiShield();
-    }
-    if (nHeight >= params.nDiffChangeTarget) {
+    } else if (nHeight >= params.nDiffChangeTarget) {
         retargetSpacing  = params.nTargetSpacingRe;
         retargetInterval = params.DifficultyAdjustmentIntervalRe();
     } else {
