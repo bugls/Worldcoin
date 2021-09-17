@@ -81,8 +81,8 @@ bool AllowDigishieldMinDifficultyForBlock(const CBlockIndex* pindexLast, const C
     // if (!params.fPowAllowDigishieldMinDifficultyBlocks)
         return false;
 
-    // Allow for a minimum block time if the elapsed time > 2*nTargetSpacing
-    return (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2);
+    // Allow for a minimum block time if the elapsed time > 4*nTargetSpacing
+    return (pblock->GetBlockTime() > pindexLast->GetBlockTime() + 30*4);
 }
 
 

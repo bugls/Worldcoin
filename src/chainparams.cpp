@@ -133,10 +133,10 @@ public:
 		consensus.nAuxpowChainId = AUXPOW_CHAIN_ID;
         consensus.nAuxpowStartHeight = AUXPOW_START_HEIGHT;
         consensus.fStrictChainId = true;
-        consensus.nLegacyBlocksBefore = AUXPOW_START_HEIGHT;     
+        consensus.nLegacyBlocksBefore = AUXPOW_START_HEIGHT;    
 
-        // Blocks 6569805 - 6610000 are  AuxPoW without Digishield
-        consensus.nDigishieldStartHeight = DIGISHIELD_START_HEIGHT;
+        // Blocks 6569805 - 6601666 are  AuxPoW without Digishield
+        consensus.nDiffChangeTargetDigishield = DIGISHIELD_START_HEIGHT;
         consensus.fDigishieldDifficultyCalculation = true;
         consensus.nDigishieldPowTargetTimespan = 30; // post-digishield: 0.5 minute
 
