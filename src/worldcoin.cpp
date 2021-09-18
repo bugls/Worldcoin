@@ -82,7 +82,7 @@ bool AllowDigishieldMinDifficultyForBlock(const CBlockIndex* pindexLast, const C
         return false;
 
     // Allow for a minimum block time if the elapsed time > 4*nTargetSpacing
-    return (pblock->GetBlockTime() > pindexLast->GetBlockTime() + 30*4);
+    return (pblock->GetBlockTime() > pindexLast->GetBlockTime() + 30 * 4);
 }
 
 
@@ -104,46 +104,31 @@ unsigned int CalculateWorldcoinNextWorkRequired(const CBlockIndex* pindexLast, i
     bool fNewDifficultyProtocolDigiShiled = (nHeight >= params.nDiffChangeTargetDigishield);
 
 
-    if (fNewDifficultyProtocolDigiShiled) { //DigiShield implementation - thanks to RealSolid & WDC for this code
+    if (fNewDifficultyProtocolDigiShiled) { //DigiShield implementation - thanks to RealSolid & DOGE for this code
         retargetTimespan = params.nDigishieldPowTargetTimespan;
         // amplitude filter - thanks to daft27 for this code
         nModulatedTimespan = retargetTimespan + (nModulatedTimespan - retargetTimespan) / 8;
         nMinTimespan = retargetTimespan - (retargetTimespan / 4);
         nMaxTimespan = retargetTimespan + (retargetTimespan / 2);
-
-        // Limit adjustment step
-        if (nModulatedTimespan < nMinTimespan)
-            nModulatedTimespan = nMinTimespan;
-        else if (nModulatedTimespan > nMaxTimespan)
-            nModulatedTimespan = nMaxTimespan;
-
-        // Retarget
-        const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
-        arith_uint256 bnNew;
-        arith_uint256 bnOld;
-        bnNew.SetCompact(pindexLast->nBits);
-        bnOld = bnNew;
-        bnNew *= nModulatedTimespan;
-        bnNew /= retargetTimespan;
-
-        if (bnNew > bnPowLimit)
-            bnNew = bnPowLimit;
-
-        return bnNew.GetCompact();
-        
     } else if (fNewDifficultyProtocolAuxpow) {
         retargetTimespan = params.nTargetTimespanRe;
-        if (nActualTimespan < retargetTimespan/16) nActualTimespan = retargetTimespan/16;
-        if (nActualTimespan > retargetTimespan*16) nActualTimespan = retargetTimespan*16;
+        nMinTimespan = retargetTimespan/16;
+        nMaxTimespan = retargetTimespan*16;
     } else if (fNewDifficultyProtocol) {
         retargetTimespan = params.nTargetTimespanRe;
-        if (nActualTimespan < (retargetTimespan - (retargetTimespan/10)) ) nActualTimespan = (retargetTimespan - (retargetTimespan/10));
-        if (nActualTimespan > (retargetTimespan + (retargetTimespan/10)) ) nActualTimespan = (retargetTimespan + (retargetTimespan/10));  
+        nMinTimespan = (retargetTimespan - (retargetTimespan/10));
+        nMaxTimespan = (retargetTimespan + (retargetTimespan/10));  
     } else {
         retargetTimespan = params.nPowTargetTimespan;
-        if (nActualTimespan < retargetTimespan/4) nActualTimespan = retargetTimespan/4;
-        if (nActualTimespan > retargetTimespan*4) nActualTimespan = retargetTimespan*4;
+        nMinTimespan = retargetTimespan/4;
+        nMaxTimespan = retargetTimespan*4;
     }
+
+    // Limit adjustment step
+    if (nModulatedTimespan < nMinTimespan)
+        nModulatedTimespan = nMinTimespan;
+    else if (nModulatedTimespan > nMaxTimespan)
+        nModulatedTimespan = nMaxTimespan;
 
     // Retarget
     arith_uint256 bnNew;
@@ -155,7 +140,7 @@ unsigned int CalculateWorldcoinNextWorkRequired(const CBlockIndex* pindexLast, i
     bool fShift = bnNew.bits() > bnPowLimit.bits() - 1;
     if (fShift)
         bnNew >>= 1;
-    bnNew *= nActualTimespan;
+    bnNew *= nModulatedTimespan;
     bnNew /= retargetTimespan;
     if (fShift)
         bnNew <<= 1;
@@ -170,62 +155,7 @@ CAmount GetWorldcoinBlockSubsidy(int nHeight, const Consensus::Params& consensus
 {
     const CAmount nMinSubsidy = 1 * COIN;
     // base payout
-    CAmount nSubsidy = 10000 * COIN;
-
-    // first block receives 2% premine to support WorldCoin
-    if (nHeight == 1) {
-	    nSubsidy = 270000000LL * COIN;
-	    return nSubsidy;
-    }
-
-    // relative height inside main period (approx. 1 year)
-    int nHeightM = nHeight % 525600;
-    double phase = ((double)nHeightM) / 525600.0 * 2.0 * M_PI;
-    // modify base payout with seasonal effect
-    nSubsidy += ((int)(2000.0 * sin(phase))) * COIN;
-
-    // bonus zones
-
-    // get number of days since the inception of WorldCoin
-    int day = nHeight / 1440 + 1;
-
-    // regular bonus zones
-
-    // every 31 days, payout is increased by a factor of 5
-    if (day % 31 == 0) {
-	    nSubsidy *= 5;
-    }
-    // every 14 days, payout is increased by a factor of 2
-    else if (day % 14 == 0) {
-	    nSubsidy *= 2;
-    }
-
-    // special bonus zones
-
-    // the first three days were special (approx. 12/21-21/24 in the year of 2013)
-    switch (day) {
-        // 5 times the normal payout on day 1
-	case 1:
-	    nSubsidy *= 5;
-	    break;
-	// 3 times the normal payout on day 2
-	case 2:
-	    nSubsidy *= 3;
-	    break;
-	// 2 times the normal payout on day 3
-	case 3:
-	    nSubsidy *= 2;
-	    break;
-    }
-
-    // subsidy is cut in half every 525600 blocks,
-    // which will occur approximately every 12 months
-    nSubsidy >>= (nHeight / 525600);
-
-    // nevertheless, there will a minimum payout of 1 WorldCoin
-    if (nSubsidy < nMinSubsidy) {
-	    nSubsidy = nMinSubsidy;
-    }
-
+    CAmount nSubsidy = 50 * COIN;
+    // bypass, don't use this function
     return nSubsidy;
 }
