@@ -25,11 +25,11 @@ int static generateMTRandom(unsigned int s, int range)
 // Worldcoin: Normally minimum difficulty blocks can only occur in between
 // retarget blocks. However, once we introduce Digishield every block is
 // a retarget, so we need to handle minimum difficulty on all blocks.
-//bool AllowDigishieldMinDifficultyForBlock(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
-//{
-//   // never allow minimal difficulty, WDC retarget works fine	
-//    return false;
-//}
+bool AllowDigishieldMinDifficultyForBlock(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
+{
+   // never allow minimal difficulty, WDC retarget works fine	
+    return false;
+}
 
 //unsigned int CalculateWorldcoinNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
 //{
@@ -70,21 +70,6 @@ bool CheckAuxPowProofOfWork(const CBlockHeader& block, const Consensus::Params& 
     return true;	
 }
 
-bool AllowDigishieldMinDifficultyForBlock(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
-{
-    // check if the chain allows minimum difficulty blocks
-    if (!params.fPowAllowMinDifficultyBlocks)
-        return false;
-
-    // check if the chain allows minimum difficulty blocks on recalc blocks
-    if (pindexLast->nHeight < params.nDiffChangeTargetDigishield)
-    // if (!params.fPowAllowDigishieldMinDifficultyBlocks)
-        return false;
-
-    // Allow for a minimum block time if the elapsed time > 4*nTargetSpacing
-    return (pblock->GetBlockTime() > pindexLast->GetBlockTime() + 30 * 4);
-}
-
 
 
 unsigned int CalculateWorldcoinNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
@@ -101,16 +86,8 @@ unsigned int CalculateWorldcoinNextWorkRequired(const CBlockIndex* pindexLast, i
 
     bool fNewDifficultyProtocol = (nHeight >= params.nDiffChangeTarget);
     bool fNewDifficultyProtocolAuxpow = (nHeight >= params.nDiffChangeTargetAuxpow);
-    bool fNewDifficultyProtocolDigiShiled = (nHeight >= params.nDiffChangeTargetDigishield);
 
-
-    if (fNewDifficultyProtocolDigiShiled) { //DigiShield implementation - thanks to RealSolid & DOGE for this code
-        retargetTimespan = params.nDigishieldPowTargetTimespan;
-        // amplitude filter - thanks to daft27 for this code
-        nModulatedTimespan = retargetTimespan + (nModulatedTimespan - retargetTimespan) / 8;
-        nMinTimespan = retargetTimespan - (retargetTimespan / 4);
-        nMaxTimespan = retargetTimespan + (retargetTimespan / 2);
-    } else if (fNewDifficultyProtocolAuxpow) {
+    if (fNewDifficultyProtocolAuxpow) {
         retargetTimespan = params.nTargetTimespanRe;
         nMinTimespan = retargetTimespan/16;
         nMaxTimespan = retargetTimespan*16;

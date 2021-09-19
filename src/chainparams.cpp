@@ -135,11 +135,10 @@ public:
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = AUXPOW_START_HEIGHT;    
 
-        // Blocks 6569805 - 6601666 are  AuxPoW without Digishield
-        consensus.nDiffChangeTargetDigishield = DIGISHIELD_START_HEIGHT;
-        consensus.fDigishieldDifficultyCalculation = true;
-        consensus.nDigishieldPowTargetTimespan = 30; // post-digishield: 0.5 minute
-
+        // Blocks 6569805 - 6601666 are  AuxPoW without LWMA
+        consensus.nDiffChangeTargetLWMA = LWMA_START_HEIGHT;
+        consensus.nLWMAPowTargetTimespan = 30; // post-lwma: 0.5 minute
+        consensus.lwmaAveragingWindow = 120;
         /** 
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
