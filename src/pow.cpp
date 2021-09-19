@@ -181,7 +181,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     assert(pindexFirst);
 
     if (nHeight >= params.nDiffChangeTargetLWMA) {
-        return Lwma3CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
+        return Lwma3CalculateNextWorkRequired(pindexLast, params);
     } else {
         return CalculateWorldcoinNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
     }
