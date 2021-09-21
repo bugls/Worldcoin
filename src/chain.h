@@ -19,8 +19,8 @@
  * current network-adjusted time before the block will be accepted.
  */
 static const int64_t MAX_FUTURE_BLOCK_TIME = 720;   // 12 minutes
-static const int64_t MAX_FUTURE_BLOCK_TIME_2 = 360;   // 6 minutes since Jan 1, 2019
-static const int64_t TIMESTAMP_FUTURE_SHIFT_FORK = 1546300800;
+static const int64_t MAX_FUTURE_BLOCK_TIME_2 = 180;   // 3 minutes since  2021/09/21
+static const int64_t TIMESTAMP_FUTURE_SHIFT_FORK = 1632197386; //Tue, 21 Sep 2021 04:09:46 GMT
 
 /**
  * Timestamp window used as a grace period by code that compares external

@@ -13,79 +13,56 @@
 #include <uint256.h>
 #include <util.h>
 
-// LWMA for BTC clones
-// Copyright (c) 2017-2018 The Bitcoin Gold developers
-// Copyright (c) 2018 Zawy (M.I.T license continued)
-// Algorithm by zawy, a modification of WT-144 by Tom Harding
-// Code by h4x3rotab of BTC Gold, modified/updated by zawy
-// https://github.com/zawy12/difficulty-algorithms/issues/3#issuecomment-388386175
-//  Future Time Limit (FTL) 
-//  FTL must be changed to 300 or N*T/20 whichever is higher.
-//  FTL in BTC clones is MAX_FUTURE_BLOCK_TIME in chain.h.
-//  FTL in Ignition, Numus, and others can be found in main.h as DRIFT.
-//  FTL in Zcash & Dash clones need to change the 2*60*60 here:
-//  if (block.GetBlockTime() > nAdjustedTime + 2 * 60 * 60)
-//  which is around line 3450 in main.cpp in ZEC and validation.cpp in Dash
-#if 0
-unsigned int LwmaCalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
-{   
-    const int64_t T = params.nLWMAPowTargetTimespan;
-    // N=45 for T=600.  N=60 for T=150.  N=90 for T=60. 
-    const int64_ N = params.nZawyLwmaAveragingWindow; 
-    const int64_t k = N*(N+1)*T/2; // BTG's code has a missing N here. They inserted it in the loop
-    const int height = pindexLast->nHeight;
-    assert(height > N);
 
-    arith_uint256 sum_target;
-    int64_t t = 0, j = 0, solvetime;
-
-    // Loop through N most recent blocks. 
-    for (int i = height - N+1; i <= height; i++) {
-        const CBlockIndex* block = pindexLast->GetAncestor(i);
-        const CBlockIndex* block_Prev = block->GetAncestor(i - 1);
-        solvetime = block->GetBlockTime() - block_Prev->GetBlockTime();
-        j++;
-        t += solvetime * j;  // Weighted solvetime sum.
-        arith_uint256 target;
-        target.SetCompact(block->nBits);
-        sum_target += target / (k * N); // BTG added the missing N back here.
+unsigned int LwmaGetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
+{
+    // Special difficulty rule for testnet:
+    // If the new block's timestamp is more than 30s * 4
+    // then allow mining of a min-difficulty block.
+    if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nLWMAPowTargetTimespan * 4) {
+        return UintToArith256(params.powLimit).GetCompact();
     }
-    // Keep t reasonable to >= 1/10 of expected t.
-    if (t < k/10 ) {   t = k/10;  }
-    arith_uint256 next_target = t * sum_target;
-     if (next_target > powLimit) { next_target = powLimit; }
-    return next_target.GetCompact();
+    return Lwma3CalculateNextWorkRequired(pindexLast, params);
 }
-#endif
-// LWMA-3 for BTC/Zcash clones
-// Copyright (c) 2017-2018 The Bitcoin Gold developers
+// LWMA-1 for BTC & Zcash clones
+// Copyright (c) 2017-2019 The Bitcoin Gold developers, Zawy, iamstenman (Microbitcoin)
 // MIT License
 // Algorithm by Zawy, a modification of WT-144 by Tom Harding
-// Code by h4x3rotab of BTC Gold, modified/updated by Zawy
-// Updated to LWMA-3 by iamstenman (MicroBitcoin)
-// For change/updates, see
-// https://github.com/zawy12/difficulty-algorithms/issues/3#issuecomment-388386175
-//  FTL must be changed to 300 or N*T/20 whichever is higher.
+// For updates see
+// https://github.com/zawy12/difficulty-algorithms/issues/3#issuecomment-442129791
+// Do not use Zcash's / Digishield's method of ignoring the ~6 most recent 
+// timestamps via the median past timestamp (MTP of 11).
+//  FTL should be lowered to about N*T/20.
 //  FTL in BTC clones is MAX_FUTURE_BLOCK_TIME in chain.h.
 //  FTL in Ignition, Numus, and others can be found in main.h as DRIFT.
 //  FTL in Zcash & Dash clones need to change the 2*60*60 here:
 //  if (block.GetBlockTime() > nAdjustedTime + 2 * 60 * 60)
-//  which is around line 3450 in main.cpp in ZEC and validation.cpp in Dash
+//  which is around line 3700 in main.cpp in ZEC and validation.cpp in Dash
+//  If your coin uses median network time instead of node's time, the "revert to 
+//  node time" rule (70 minutes in BCH, ZEC, & BTC) should be reduced to FTL/2 
+//  to prevent 33% Sybil attack that can manipulate difficulty via timestamps. See:
+// https://github.com/zcash/zcash/issues/4021
 
 unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
 {
-    // N=45 for T=600.  N=60 for T=150.  N=90 for T=60.  N=120 for T=30 ?
-    const int64_t T = params.nLWMAPowTargetTimespan; //30s
-    const int64_t N = params.lwmaAveragingWindow;
-    const int64_t k = N * (N + 1) * T / 2;
+    const int64_t T = params.nLWMAPowTargetTimespan;
+
+   // For T=600, 300, 150 use approximately N=60, 90, 120
+    const int64_t N = params.lwmaAveragingWindow;  
+
+    // Define a k that will be used to get a proper average after weighting the solvetimes.
+    const int64_t k = N * (N + 1) * T / 2; 
+
     const int64_t height = pindexLast->nHeight;
     const arith_uint256 powLimit = UintToArith256(params.powLimit);
     
+   // New coins just "give away" first N blocks. It's better to guess
+   // this value instead of using powLimit, but err on high side to not get stuck.
     if (height < N) { return powLimit.GetCompact(); }
 
-    arith_uint256 sumTarget, previousDiff, nextTarget;
+    arith_uint256 avgTarget, nextTarget;
     int64_t thisTimestamp, previousTimestamp;
-    int64_t t = 0, j = 0, solvetimeSum = 0;
+    int64_t sumWeightedSolvetimes = 0, j = 0;
 
     const CBlockIndex* blockPreviousTimestamp = pindexLast->GetAncestor(height - N);
     previousTimestamp = blockPreviousTimestamp->GetBlockTime();
@@ -93,26 +70,29 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     // Loop through N most recent blocks. 
     for (int64_t i = height - N + 1; i <= height; i++) {
         const CBlockIndex* block = pindexLast->GetAncestor(i);
-        thisTimestamp = (block->GetBlockTime() > previousTimestamp) ? block->GetBlockTime() : previousTimestamp + 1;
 
+        // Prevent solvetimes from being negative in a safe way. It must be done like this. 
+        // Do not attempt anything like  if (solvetime < 1) {solvetime=1;}
+        // The +1 ensures new coins do not calculate nextTarget = 0.
+        thisTimestamp = (block->GetBlockTime() > previousTimestamp) ? 
+                            block->GetBlockTime() : previousTimestamp + 1;
+
+       // 6*T limit prevents large drops in diff from long solvetimes which would cause oscillations.
         int64_t solvetime = std::min(6 * T, thisTimestamp - previousTimestamp);
-        previousTimestamp = thisTimestamp;
 
+       // The following is part of "preventing negative solvetimes". 
+        previousTimestamp = thisTimestamp;
+       
+       // Give linearly higher weight to more recent solvetimes.
         j++;
-        t += solvetime * j; // Weighted solvetime sum.
+        sumWeightedSolvetimes += solvetime * j; 
+
         arith_uint256 target;
         target.SetCompact(block->nBits);
-        sumTarget += target / (k * N);
-
-      //  if (i > height - 3) { solvetimeSum += solvetime; } // deprecated
-        if (i == height) { previousDiff = target.SetCompact(block->nBits); }
+        avgTarget += target / N / k; // Dividing by k here prevents an overflow below.
     }
+    nextTarget = avgTarget * sumWeightedSolvetimes; 
 
-    nextTarget = t * sumTarget;
-    
-    if (nextTarget > (previousDiff * 150) / 100) { nextTarget = (previousDiff * 150) / 100; }
-    if ((previousDiff * 67) / 100 > nextTarget) { nextTarget = (previousDiff * 67)/100; }
-   //  if (solvetimeSum < (8 * T) / 10) { nextTarget = previousDiff * 100 / 106; } // deprecated
     if (nextTarget > powLimit) { nextTarget = powLimit; }
 
     return nextTarget.GetCompact();
@@ -147,24 +127,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     // Only change once per difficulty adjustment interval
     const int64_t difficultyAdjustmentInterval = retargetInterval;
 
-    if ((pindexLast->nHeight+1) % difficultyAdjustmentInterval != 0)
-    {
-        if (params.fPowAllowMinDifficultyBlocks)
-        {
-            // Special difficulty rule for testnet:
-            // If the new block's timestamp is more than 4* 30 s
-            // then allow mining of a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + 30 * 4)
-                return nProofOfWorkLimit;
-            else
-            {
-                // Return the last non-special-min-difficulty-rules-block
-                const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
-                    pindex = pindex->pprev;
-                return pindex->nBits;
-            }
-        }
+    if ((pindexLast->nHeight+1) % difficultyAdjustmentInterval != 0) {
         return pindexLast->nBits;
     }
 
@@ -181,7 +144,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     assert(pindexFirst);
 
     if (nHeight >= params.nDiffChangeTargetLWMA) {
-        return Lwma3CalculateNextWorkRequired(pindexLast, params);
+        return LwmaGetNextWorkRequired(pindexLast, pblock, params);
     } else {
         return CalculateWorldcoinNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
     }
