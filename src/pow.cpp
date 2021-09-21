@@ -14,19 +14,7 @@
 #include <util.h>
 
 
-unsigned int LwmaGetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
-{
-    // If the new block's timestamp is more than 30s * 8
-    // then allow mining of a min-difficulty block.
-    if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nLWMAPowTargetTimespan * 8) {
 
-        LogPrintf("Set diff to powLimit, timingspan is %d, compactlimit is %d, limit is %d \n", 
-                    params.nLWMAPowTargetTimespan * 4, UintToArith256(params.powLimit).GetCompact(), params.powLimit);
-
-        return UintToArith256(params.powLimit).GetCompact();
-    }
-    return Lwma3CalculateNextWorkRequired(pindexLast, params);
-}
 // LWMA-1 for BTC & Zcash clones
 // Copyright (c) 2017-2019 The Bitcoin Gold developers, Zawy, iamstenman (Microbitcoin)
 // MIT License
@@ -101,6 +89,19 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     return nextTarget.GetCompact();
 }
 
+unsigned int LwmaGetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
+{
+    // If the new block's timestamp is more than 30s * 8
+    // then allow mining of a min-difficulty block.
+    if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nLWMAPowTargetTimespan * 8) {
+
+        LogPrintf("Set diff to powLimit, timingspan is %d, compactlimit is %d, limit is %d \n", 
+                    params.nLWMAPowTargetTimespan * 4, UintToArith256(params.powLimit).GetCompact(), params.powLimit);
+
+        return UintToArith256(params.powLimit).GetCompact();
+    }
+    return Lwma3CalculateNextWorkRequired(pindexLast, params);
+}
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
