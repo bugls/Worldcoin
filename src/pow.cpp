@@ -95,7 +95,7 @@ unsigned int LwmaGetNextWorkRequired(const CBlockIndex* pindexLast, const CBlock
     // then allow mining of a min-difficulty block.
     if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nLWMAPowTargetTimespan * 8) {
 
-        LogPrintf("Set diff to powLimit, timingspan is %u, compactlimit is %u, limit is %u \n", 
+        LogPrintf("Set diff to powLimit, timingspan is %u, compactlimit is %u \n", 
                     static_cast<unsigned int>(params.nLWMAPowTargetTimespan * 4), static_cast<unsigned int>(UintToArith256(params.powLimit).GetCompact()));
 
         return UintToArith256(params.powLimit).GetCompact();
