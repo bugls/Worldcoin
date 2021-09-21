@@ -89,19 +89,6 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     return nextTarget.GetCompact();
 }
 
-unsigned int LwmaGetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
-{
-    // If the new block's timestamp is more than 30s * 8
-    // then allow mining of a min-difficulty block.
-    if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nLWMAPowTargetTimespan * 8) {
-
-        LogPrintf("Set diff to powLimit, timingspan is %u, compactlimit is %u \n", 
-                    static_cast<unsigned int>(params.nLWMAPowTargetTimespan * 4), static_cast<unsigned int>(UintToArith256(params.powLimit).GetCompact()));
-
-        return UintToArith256(params.powLimit).GetCompact();
-    }
-    return Lwma3CalculateNextWorkRequired(pindexLast, params);
-}
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
@@ -148,7 +135,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     assert(pindexFirst);
 
     if (nHeight >= params.nDiffChangeTargetLWMA) {
-        return LwmaGetNextWorkRequired(pindexLast, pblock, params);
+        return Lwma3CalculateNextWorkRequired(pindexLast, params);
     } else {
         return CalculateWorldcoinNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
     }
