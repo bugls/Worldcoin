@@ -89,7 +89,7 @@ public:
 
 
         consensus.nDiffChangeTarget = 600000;
-        consensus.nDiffChangeTargetAuxpow = 6570240;
+        consensus.nDiffChangeTargetAuxpow = LWMA_START_HEIGHT;
         consensus.patchBlockRewardDuration = 20160;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); 
         consensus.nPowTargetTimespan = 0.35 *24 * 60 * 60;	// litecoin: 0.35 day

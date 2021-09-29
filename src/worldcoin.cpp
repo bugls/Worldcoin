@@ -85,13 +85,8 @@ unsigned int CalculateWorldcoinNextWorkRequired(const CBlockIndex* pindexLast, i
     int64_t nMinTimespan;
 
     bool fNewDifficultyProtocol = (nHeight >= params.nDiffChangeTarget);
-    bool fNewDifficultyProtocolAuxpow = (nHeight >= params.nDiffChangeTargetAuxpow);
 
-    if (fNewDifficultyProtocolAuxpow) {
-        retargetTimespan = params.nTargetTimespanRe;
-        nMinTimespan = retargetTimespan/16;
-        nMaxTimespan = retargetTimespan*16;
-    } else if (fNewDifficultyProtocol) {
+    if (fNewDifficultyProtocol) {
         retargetTimespan = params.nTargetTimespanRe;
         nMinTimespan = (retargetTimespan - (retargetTimespan/10));
         nMaxTimespan = (retargetTimespan + (retargetTimespan/10));  
