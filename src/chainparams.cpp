@@ -89,7 +89,6 @@ public:
 
 
         consensus.nDiffChangeTarget = 600000;
-        consensus.nDiffChangeTargetAuxpow = LWMA_START_HEIGHT;
         consensus.patchBlockRewardDuration = 20160;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); 
         consensus.nPowTargetTimespan = 0.35 *24 * 60 * 60;	// litecoin: 0.35 day
@@ -219,9 +218,11 @@ public:
 
         checkpointData = {
             {
-                {  0, uint256S("0x7231b064d3e620c55960abce2963ea19e1c3ffb6f5ff70e975114835a7024107")},
+                {  0,       uint256S("0x7231b064d3e620c55960abce2963ea19e1c3ffb6f5ff70e975114835a7024107")},
                 {  6120000, uint256S("0xccf16a2e8b20edae90aa78fa26c4f8b9b048deef708ea3fd5b2e6d596909eef9")},
-                {  6569800, uint256S("0x8f5848886030d79e8de68dc932df4b5347b07c38dfae87eaaf6f9f5a1d1b86ee")},
+                {  6569800, uint256S("0x191398ee21b43bc524966b3daa129ca93eb06f8883013abfcf47f3f2e0eaaacc")},
+                {  6570522, uint256S("0x6c5cfeee8f724d83ec1331cc78fd288661bff24415d01cc5dc006ee467e93593")},
+                {  6570530, uint256S("0x0481191e24da748820450e562f7b4ad450eddcabe66291cab91b1a947996a5b1")},
             }
         };
 
