@@ -175,16 +175,24 @@ public:
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
         vSeeds.emplace_back("43.132.183.9:1181");
-        //vSeeds.emplace_back("seednode2.worldcoin.global");
-        //vSeeds.emplace_back("seednode3.worldcoin.global");
-        //vSeeds.emplace_back("seednode4.worldcoin.global");
-        //vSeeds.emplace_back("seednode5.worldcoin.global");
-        //vSeeds.emplace_back("seednode6.worldcoin.global");
-        //vSeeds.emplace_back("seednode7.worldcoin.global");
-        //vSeeds.emplace_back("seednode8.worldcoin.global");
-        //vSeeds.emplace_back("seednode9.worldcoin.global");
-        //vSeeds.emplace_back("seednode10.worldcoin.global");
-  
+        vSeeds.emplace_back("72.18.200.11");
+        vSeeds.emplace_back("103.147.12.229");
+        vSeeds.emplace_back("64.235.35.46");
+        
+        vSeeds.emplace_back("seednode.worldcoin.global");
+        vSeeds.emplace_back("seednode2.worldcoin.global");
+        vSeeds.emplace_back("seednode3.worldcoin.global");
+        vSeeds.emplace_back("seednode4.worldcoin.global");
+        vSeeds.emplace_back("seednode5.worldcoin.global");
+        vSeeds.emplace_back("seednode6.worldcoin.global");
+        vSeeds.emplace_back("seednode7.worldcoin.global");
+        vSeeds.emplace_back("seednode8.worldcoin.global");
+        vSeeds.emplace_back("seednode9.worldcoin.global");
+        vSeeds.emplace_back("seednode10.worldcoin.global");
+        vSeeds.emplace_back("seednode11.worldcoin.global");
+        vSeeds.emplace_back("seednode12.worldcoin.global");
+        vSeeds.emplace_back("seednode13.worldcoin.global");
+        vSeeds.emplace_back("seednode14.worldcoin.global");  
 
         //vSeeds.push_back("103.125.234.117");
         //vSeeds.push_back("69.11.204.43");
